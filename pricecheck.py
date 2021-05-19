@@ -8,6 +8,7 @@ import asyncio
 
 with open(os.path.join("data/products", "pilona.txt"), encoding='utf-8') as f:
     productos_pilona = f.read().splitlines()
+    print(productos_pilona)
 
 with open(os.path.join("data/products", "poli.txt"), encoding='utf-8') as f:
     productos_poli = f.read().splitlines()
@@ -127,6 +128,9 @@ def check_planetaloz(r, link):
     return info
 
 def check_prices():
+
+    body = []
+
     for link in productos_pilona:
         loop = asyncio.get_event_loop()
         info = loop.run_until_complete(session(link))
@@ -135,29 +139,16 @@ def check_prices():
         precio = info[1]
         tienda = info[2]
 
-        precio_inicial = db.record("SELECT PrecioInicial FROM precio WHERE ProductID = ?", link)
+        linea = f"{nombre}: ${precio} en {tienda}.\n"
+        body.append(linea)
 
-        if precio_inicial[0] > precio:
-            send_email_pilona(nombre, precio_inicial[0], precio, tienda, link)
-        else:
-            pass
+    body.sort()
+    body.insert(0, "Este es el precio actual de tus productos guardados:\n\n")
+    body = "".join(body)
 
-    for link in productos_poli:
-        loop = asyncio.get_event_loop()
-        info = loop.run_until_complete(session(link))
+    send_email_pilona(body)
 
-        nombre = info[0]
-        precio = info[1]
-        tienda = info[2]
-
-        precio_inicial = db.record("SELECT PrecioInicial FROM precio WHERE ProductID = ?", link)
-
-        if precio_inicial[0] > precio:
-            send_email_poli(nombre, precio_inicial[0], precio, tienda, link)
-        else:
-            pass
-
-def send_email_poli(nombre, precio_inicial, precio, tienda, link):
+def send_email_pilona(body):
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.ehlo()
     server.starttls()
@@ -165,24 +156,8 @@ def send_email_poli(nombre, precio_inicial, precio, tienda, link):
 
     server.login('chispopalertas@gmail.com', 'ysooqeblypsipibh')
 
-    subject = f"Poli: El precio de {nombre} en {tienda} ha cambiado"
-    body = f"El precio de {nombre} en {tienda} ha cambiado de ${precio_inicial} a ${precio}.\nRevisa en {link}"
-    msg = f"Subject:{subject}\n\n{body}"
+    subject = f"Pilona: Estos son los precios actuales de tus productos"
 
-    server.sendmail('chispopalertas@gmail.com', 'poliarriagadac@gmail.com', msg)
-
-    server.quit()
-
-def send_email_pilona(nombre, precio_inicial, precio, tienda, link):
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.ehlo()
-    server.starttls()
-    server.ehlo()
-
-    server.login('chispopalertas@gmail.com', 'ysooqeblypsipibh')
-
-    subject = f"Pilona: El precio de {nombre} en {tienda} ha cambiado"
-    body = f"El precio de {nombre} en {tienda} ha cambiado de ${precio_inicial} a ${precio}.\nRevisa en {link}"
     msg = f"Subject:{subject}\n\n{body}"
 
     server.sendmail('chispopalertas@gmail.com', 'pilar.vasquez.h@gmail.com', msg)
@@ -192,7 +167,7 @@ def send_email_pilona(nombre, precio_inicial, precio, tienda, link):
 def main():
     while True:
         check_prices()
-        time.sleep(86400)
+        return
 
 if __name__ == "__main__":
 	main()
