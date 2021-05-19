@@ -8,7 +8,6 @@ import asyncio
 
 with open(os.path.join("data/products", "pilona.txt"), encoding='utf-8') as f:
     productos_pilona = f.read().splitlines()
-    print(productos_pilona)
 
 with open(os.path.join("data/products", "poli.txt"), encoding='utf-8') as f:
     productos_poli = f.read().splitlines()
@@ -19,21 +18,111 @@ async def session(link):
 
     ## zmart
     if "zmart" in link:
-        div = r.html.find("div[id = 'PriceProduct']", first=True)
-        div =  div.full_text.encode("ascii", "ignore")
-        div = div.decode()
+        info = check_zmart(r, link)
+        return info
 
-        precio = [x for x in div if x.isdigit()]
-        precio = "".join(precio)
-        precio = int(precio)
+    elif "microplay" in link:
+        info = check_microplay(r, link)
+        return info
 
-        nombre = r.html.find("title", first=True)
-        nombre = nombre.full_text.encode("ascii", "ignore")
-        nombre = nombre.decode()
+    elif "weplay" in link:
+        info = check_weplay(r, link)
+        return info
 
-        info = [nombre, precio]
-        print(nombre, precio)
-        print(type(nombre), type(precio))
+    elif "warpig" in link:
+        info = check_warpig(r, link)
+        return info
+
+    elif "planetaloz" in link:
+        info = check_planetaloz(r, link)
+        return info
+
+
+def check_zmart(r, link):
+    div = r.html.find("div[id = 'PriceProduct']", first=True)
+    div =  div.full_text.encode("ascii", "ignore")
+    div = div.decode()
+
+    precio = [x for x in div if x.isdigit()]
+    precio = "".join(precio)
+    precio = int(precio)
+
+    nombre = r.html.find("title", first=True)
+    nombre = nombre.full_text.encode("ascii", "ignore")
+    nombre = nombre.decode()
+    nombre = nombre[:-11]
+
+    tienda = "Zmart.cl"
+
+    info = [nombre, precio, tienda]
+
+    return info
+
+def check_microplay(r, link):
+    nombre = r.html.find("h1", first=True)
+    nombre = nombre.full_text.encode("ascii", "ignore")
+    nombre = nombre.decode()
+    nombre = nombre.strip()
+
+    precio = r.html.find('script[type="text/javascript"]')[10].full_text
+    precios = precio.splitlines()
+    precio = [x for x in precios if 'price' in x]
+    precio = precio[0].strip().split(',')[0]
+    precio = [x for x in precio if x.isdigit()]
+    precio = int("".join(precio))
+
+    tienda = "Microplay"
+
+    info = [nombre, precio, tienda]
+
+    return info
+
+def check_weplay(r, link):
+    nombre = r.html.find('title', first=True)
+    nombre = nombre.full_text.encode("ascii", "ignore")
+    nombre = nombre.decode()
+
+    precio = r.html.find('span[class = "price"]', first=True)
+    precio = precio.full_text
+    precio = [x for x in precio if x.isdigit()]
+    precio = int("".join(precio))
+
+    tienda = "WePlay"
+
+    info = [nombre, precio, tienda]
+
+    return info
+
+def check_warpig(r, link):
+    nombre = r.html.find('title', first=True)
+    nombre = nombre.full_text.encode("ascii", "ignore")
+    nombre = nombre.decode()
+    nombre = nombre[:-15]
+
+    precio = r.html.find('span[data-bs="product.finalPrice"]', first=True)
+    precio = precio.full_text
+    precio = [x for x in precio if x.isdigit()]
+    precio = int("".join(precio))
+
+    tienda = "Warpig Games"
+
+    info = [nombre, precio, tienda]
+
+    return info
+
+def check_planetaloz(r, link):
+    nombre = r.html.find('title', first=True)
+    nombre = nombre.full_text.encode("ascii", "ignore")
+    nombre = nombre.decode()
+
+    precio = r.html.find('span[itemprop="price"]', first=True)
+    precio = precio.full_text
+    precio = [x for x in precio if x.isdigit()]
+    precio = int("".join(precio))
+
+    tienda = "Planeta LoZ"
+
+    info = [nombre, precio, tienda]
 
     return info
 
@@ -44,13 +133,14 @@ def check_prices():
 
         nombre = info[0]
         precio = info[1]
+        tienda = info[2]
 
         precio_inicial = db.record("SELECT PrecioInicial FROM precio WHERE ProductID = ?", link)
 
-        if precio_inicial[0] < 40000:
-            send_email_pilona(nombre, precio)
+        if precio_inicial[0] != precio:
+            send_email_pilona(nombre, precio_inicial[0], precio, tienda, link)
         else:
-            send_email_pilona("han pasado 12 horas", "12 horas")
+            send_email_pilona(nombre, precio_inicial[0], precio, tienda, link)
 
     for link in productos_poli:
         loop = asyncio.get_event_loop()
@@ -58,43 +148,45 @@ def check_prices():
 
         nombre = info[0]
         precio = info[1]
+        tienda = info[2]
 
         precio_inicial = db.record("SELECT PrecioInicial FROM precio WHERE ProductID = ?", link)
 
-        if precio_inicial[0] < 40000:
-            send_email_poli(nombre, precio)
+        if precio_inicial[0] != precio:
+            send_email_poli(nombre, precio_inicial[0], precio, tienda, link)
         else:
-            send_email_poli("poli 12 horas", "12 horas")
+            send_email_poli(nombre, precio_inicial[0], precio, tienda, link)
 
-def send_email_poli(nombre, precio):
+
+def send_email_poli(nombre, precio_inicial, precio, tienda, link):
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.ehlo()
     server.starttls()
     server.ehlo()
 
-    server.login('pilar.vasquez.h@gmail.com', 'rmighwhbizgtfvpv')
+    server.login('chispopalertas@gmail.com', 'ysooqeblypsipibh')
 
-    subject = "Prueba Poli"
-    body = "lalala"
+    subject = f"Poli: El precio de {nombre} en {tienda} ha cambiado"
+    body = f"El precio de {nombre} en {tienda} ha cambiado de ${precio_inicial} a ${precio}.\nRevisa en {link}"
     msg = f"Subject:{subject}\n\n{body}"
 
-    server.sendmail('pilar.vasquez.h@gmail.com', 'pilar.vasquez.h@gmail.com', msg)
+    server.sendmail('chispopalertas@gmail.com', 'pilar.vasquez.h@gmail.com', msg)
 
     server.quit()
 
-def send_email_pilona(nombre, precio):
+def send_email_pilona(nombre, precio_inicial, precio, tienda, link):
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.ehlo()
     server.starttls()
     server.ehlo()
 
-    server.login('pilar.vasquez.h@gmail.com', 'rmighwhbizgtfvpv')
+    server.login('chispopalertas@gmail.com', 'ysooqeblypsipibh')
 
-    subject = nombre
-    body = f"El producto {nombre} cuesta ${precio} actualmente."
+    subject = f"Pilona: El precio de {nombre} en {tienda} ha cambiado"
+    body = f"El precio de {nombre} en {tienda} ha cambiado de ${precio_inicial} a ${precio}.\nRevisa en {link}"
     msg = f"Subject:{subject}\n\n{body}"
 
-    server.sendmail('pilar.vasquez.h@gmail.com', 'pilar.vasquez.h@gmail.com', msg)
+    server.sendmail('chispopalertas@gmail.com', 'pilar.vasquez.h@gmail.com', msg)
 
     server.quit()
 
