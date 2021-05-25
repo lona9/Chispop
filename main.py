@@ -12,7 +12,7 @@ with open(os.path.join("data/products", "pilona.txt"), encoding='utf-8') as f:
 with open(os.path.join("data/products", "poli.txt"), encoding='utf-8') as f:
     productos_poli = f.read().splitlines()
 
-with open(os.path.join("data/products", "pali.txt"), encoding='utf-8') as f:
+with open(os.path.join("data/products", "pala.txt"), encoding='utf-8') as f:
     productos_pala = f.read().splitlines()
 
 async def session(link):

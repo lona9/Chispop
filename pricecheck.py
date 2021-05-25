@@ -12,6 +12,9 @@ with open(os.path.join("data/products", "pilona.txt"), encoding='utf-8') as f:
 with open(os.path.join("data/products", "poli.txt"), encoding='utf-8') as f:
     productos_poli = f.read().splitlines()
 
+with open(os.path.join("data/products", "pala.txt"), encoding='utf-8') as f:
+    productos_pala = f.read().splitlines()
+
 async def session(link):
     asession = AsyncHTMLSession()
     r = await asession.get(link)
@@ -74,7 +77,6 @@ def check_microplay(r, link):
     tienda = "Microplay"
 
     info = [nombre, precio, tienda]
-
     return info
 
 def check_weplay(r, link):
@@ -126,7 +128,7 @@ def check_planetaloz(r, link):
 
     return info
 
-def check_prices():
+def check_prices_pilona():
 
     body = []
 
@@ -146,6 +148,29 @@ def check_prices():
     body = "".join(body)
 
     send_email_pilona(body)
+    print("email sent to pilona!")
+
+def check_prices_pala():
+
+    body = []
+
+    for link in productos_pala:
+        loop = asyncio.get_event_loop()
+        info = loop.run_until_complete(session(link))
+
+        nombre = info[0]
+        precio = info[1]
+        tienda = info[2]
+
+        linea = f"{nombre}: ${precio} en {tienda}.\n"
+        body.append(linea)
+
+    body.sort()
+    body.insert(0, "Este es el precio actual de tus productos guardados:\n\n")
+    body = "".join(body)
+
+    send_email_pala(body)
+    print("email sent to pala chica!")
 
 def send_email_pilona(body):
     server = smtplib.SMTP('smtp.gmail.com', 587)
@@ -163,9 +188,26 @@ def send_email_pilona(body):
 
     server.quit()
 
+def send_email_pala(body):
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.ehlo()
+    server.starttls()
+    server.ehlo()
+
+    server.login('chispopalertas@gmail.com', 'ysooqeblypsipibh')
+
+    subject = f"Pala Chica: Estos son los precios actuales de tus productos"
+
+    msg = f"Subject:{subject}\n\n{body}"
+
+    server.sendmail('chispopalertas@gmail.com', 'paula.vash@gmail.com', msg)
+
+    server.quit()
+
 def main():
     while True:
-        check_prices()
+        check_prices_pilona()
+        check_prices_pala()
         return
 
 if __name__ == "__main__":

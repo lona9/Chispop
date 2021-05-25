@@ -15,7 +15,7 @@ with open(os.path.join("data/products", "poli.txt")) as f:
 with open(os.path.join("data/products", "pala.txt")) as f:
     productos_pala = f.read().splitlines()
 
-productos_totales = productos_poli + productos_pilona + productos pala
+productos_totales = productos_poli + productos_pilona + productos_pala
 
 async def session(link):
     asession = AsyncHTMLSession()
@@ -106,6 +106,7 @@ def set_initial_prices(productos_totales):
     precios = []
 
     for link in productos_totales:
+        print(link)
         loop = asyncio.get_event_loop()
         info = loop.run_until_complete(session(link))
         precio = info
