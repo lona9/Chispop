@@ -12,8 +12,10 @@ with open(os.path.join("data/products", "pilona.txt")) as f:
 with open(os.path.join("data/products", "poli.txt")) as f:
     productos_poli = f.read().splitlines()
 
-productos_totales = productos_poli + productos_pilona
-print(productos_totales)
+with open(os.path.join("data/products", "pala.txt")) as f:
+    productos_pala = f.read().splitlines()
+
+productos_totales = productos_poli + productos_pilona + productos pala
 
 async def session(link):
     asession = AsyncHTMLSession()

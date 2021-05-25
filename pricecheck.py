@@ -8,7 +8,6 @@ import asyncio
 
 with open(os.path.join("data/products", "pilona.txt"), encoding='utf-8') as f:
     productos_pilona = f.read().splitlines()
-    print(productos_pilona)
 
 with open(os.path.join("data/products", "poli.txt"), encoding='utf-8') as f:
     productos_poli = f.read().splitlines()

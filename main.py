@@ -12,6 +12,9 @@ with open(os.path.join("data/products", "pilona.txt"), encoding='utf-8') as f:
 with open(os.path.join("data/products", "poli.txt"), encoding='utf-8') as f:
     productos_poli = f.read().splitlines()
 
+with open(os.path.join("data/products", "pali.txt"), encoding='utf-8') as f:
+    productos_pala = f.read().splitlines()
+
 async def session(link):
     asession = AsyncHTMLSession()
     r = await asession.get(link)
@@ -157,6 +160,21 @@ def check_prices():
         else:
             pass
 
+    for link in productos_pali:
+        loop = asyncio.get_event_loop()
+        info = loop.run_until_complete(session(link))
+
+        nombre = info[0]
+        precio = info[1]
+        tienda = info[2]
+
+        precio_inicial = db.record("SELECT PrecioInicial FROM precio WHERE ProductID = ?", link)
+
+        if precio_inicial[0] > precio:
+            send_email_pala(nombre, precio_inicial[0], precio, tienda, link)
+        else:
+            pass
+
 def send_email_poli(nombre, precio_inicial, precio, tienda, link):
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.ehlo()
@@ -186,6 +204,22 @@ def send_email_pilona(nombre, precio_inicial, precio, tienda, link):
     msg = f"Subject:{subject}\n\n{body}"
 
     server.sendmail('chispopalertas@gmail.com', 'pilar.vasquez.h@gmail.com', msg)
+
+    server.quit()
+
+def send_email_pala(nombre, precio_inicial, precio, tienda, link):
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.ehlo()
+    server.starttls()
+    server.ehlo()
+
+    server.login('chispopalertas@gmail.com', 'ysooqeblypsipibh')
+
+    subject = f"Paula: El precio de {nombre} en {tienda} ha cambiado"
+    body = f"El precio de {nombre} en {tienda} ha cambiado de ${precio_inicial} a ${precio}.\nRevisa en {link}"
+    msg = f"Subject:{subject}\n\n{body}"
+
+    server.sendmail('chispopalertas@gmail.com', 'paula.vash@gmail.com', msg)
 
     server.quit()
 
