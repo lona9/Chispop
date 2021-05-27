@@ -40,6 +40,14 @@ async def session(link):
         info = check_planetaloz(r, link)
         return info
 
+    elif "linio" in link:
+        info = check_linio(r, link)
+        return info
+
+    elif "paris" in link:
+        info = check_paris(r, link)
+        return info
+
 
 def check_zmart(r, link):
     div = r.html.find("div[id = 'PriceProduct']", first=True)
@@ -124,6 +132,39 @@ def check_planetaloz(r, link):
     precio = int("".join(precio))
 
     tienda = "Planeta LoZ"
+
+    info = [nombre, precio, tienda]
+
+    return info
+
+def check_linio(r, link):
+    nombre = r.html.find('title', first=True)
+    nombre = nombre.full_text.encode("ascii", "ignore")
+    nombre = nombre.decode()
+    nombre = nombre.split('|')[0].strip()
+
+    precio = r.html.find('span[class = "price-main-md"]', first=True)
+    precio = precio.full_text
+    precio = [x for x in precio if x.isdigit()]
+    precio = int("".join(precio))
+
+    tienda = "Linio"
+
+    info = [nombre, precio, tienda]
+
+    return info
+
+def check_paris(r, link):
+    nombre = r.html.find('span[class="breadcrumb-element"]', first=True)
+    nombre = nombre.full_text.encode("ascii", "ignore")
+    nombre = nombre.decode()
+
+    precio = r.html.find('span[itemprop="price"]', first=True)
+    precio = precio.full_text
+    precio = [x for x in precio if x.isdigit()]
+    precio = int("".join(precio))
+
+    tienda = "Paris"
 
     info = [nombre, precio, tienda]
 
@@ -226,7 +267,7 @@ def send_email_pala(nombre, precio_inicial, precio, tienda, link):
 def main():
     while True:
         check_prices()
-        time.sleep(86400)
+        time.sleep(43200)
 
 if __name__ == "__main__":
 	main()

@@ -42,6 +42,14 @@ async def session(link):
         info = check_planetaloz(r, link)
         return info
 
+    elif "linio" in link:
+        info = check_linio(r, link)
+        return info
+
+    elif "paris" in link:
+        info = check_paris(r, link)
+        return info
+
 def check_zmart(r, link):
     div = r.html.find("div[id = 'PriceProduct']", first=True)
     div =  div.full_text.encode("ascii", "ignore")
@@ -90,6 +98,36 @@ def check_warpig(r, link):
     return info
 
 def check_planetaloz(r, link):
+
+    precio = r.html.find('span[itemprop="price"]', first=True)
+    precio = precio.full_text
+    precio = [x for x in precio if x.isdigit()]
+    precio = int("".join(precio))
+
+    info = precio
+
+    return info
+
+def check_linio(r, link):
+    nombre = r.html.find('title', first=True)
+    nombre = nombre.full_text.encode("ascii", "ignore")
+    nombre = nombre.decode()
+    nombre = nombre.split('|')[0].strip()
+
+    precio = r.html.find('span[class = "price-main-md"]', first=True)
+    precio = precio.full_text
+    precio = [x for x in precio if x.isdigit()]
+    precio = int("".join(precio))
+
+    info = precio
+
+    return info
+
+
+def check_paris(r, link):
+    nombre = r.html.find('span[class="breadcrumb-element"]', first=True)
+    nombre = nombre.full_text.encode("ascii", "ignore")
+    nombre = nombre.decode()
 
     precio = r.html.find('span[itemprop="price"]', first=True)
     precio = precio.full_text
