@@ -201,7 +201,7 @@ def check_prices():
         else:
             pass
 
-    for link in productos_pali:
+    for link in productos_pala:
         loop = asyncio.get_event_loop()
         info = loop.run_until_complete(session(link))
 
