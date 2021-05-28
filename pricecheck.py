@@ -213,6 +213,28 @@ def check_prices_pala():
     send_email_pala(body)
     print("email sent to pala chica!")
 
+def check_prices_poli():
+
+    body = []
+
+    for link in productos_poli:
+        loop = asyncio.get_event_loop()
+        info = loop.run_until_complete(session(link))
+
+        nombre = info[0]
+        precio = info[1]
+        tienda = info[2]
+
+        linea = f"{nombre}: ${precio} en {tienda}.\n"
+        body.append(linea)
+
+    body.sort()
+    body.insert(0, "Este es el precio actual de tus productos guardados:\n\n")
+    body = "".join(body)
+
+    send_email_poli(body)
+    print("email sent to poli!")
+
 def send_email_pilona(body):
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.ehlo()
@@ -245,10 +267,27 @@ def send_email_pala(body):
 
     server.quit()
 
+def send_email_poli(body):
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.ehlo()
+    server.starttls()
+    server.ehlo()
+
+    server.login('chispopalertas@gmail.com', 'ysooqeblypsipibh')
+
+    subject = f"Poli: Estos son los precios actuales de tus productos"
+
+    msg = f"Subject:{subject}\n\n{body}"
+
+    server.sendmail('chispopalertas@gmail.com', 'poliarriagadac@gmail.com', msg)
+
+    server.quit()
+
 def main():
     while True:
         check_prices_pilona()
         check_prices_pala()
+        check_prices_poli()
         return
 
 if __name__ == "__main__":
