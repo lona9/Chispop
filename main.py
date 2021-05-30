@@ -174,6 +174,7 @@ def check_prices():
     for link in productos_pilona:
         loop = asyncio.get_event_loop()
         info = loop.run_until_complete(session(link))
+        print(link)
 
         nombre = info[0]
         precio = info[1]
@@ -189,12 +190,14 @@ def check_prices():
     for link in productos_poli:
         loop = asyncio.get_event_loop()
         info = loop.run_until_complete(session(link))
+        print(link)
 
         nombre = info[0]
         precio = info[1]
         tienda = info[2]
 
         precio_inicial = db.record("SELECT PrecioInicial FROM precio WHERE ProductID = ?", link)
+
 
         if precio_inicial[0] > precio:
             send_email_poli(nombre, precio_inicial[0], precio, tienda, link)
@@ -204,6 +207,7 @@ def check_prices():
     for link in productos_pala:
         loop = asyncio.get_event_loop()
         info = loop.run_until_complete(session(link))
+        print(link)
 
         nombre = info[0]
         precio = info[1]
@@ -267,7 +271,7 @@ def send_email_pala(nombre, precio_inicial, precio, tienda, link):
 def main():
     while True:
         check_prices()
-        time.sleep(43200)
+        time.sleep(10800)
 
 if __name__ == "__main__":
 	main()
