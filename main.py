@@ -172,52 +172,62 @@ def check_paris(r, link):
 
 def check_prices():
     for link in productos_pilona:
-        loop = asyncio.get_event_loop()
-        info = loop.run_until_complete(session(link))
-        print(link)
+        try:
+            loop = asyncio.get_event_loop()
+            info = loop.run_until_complete(session(link))
+            print(link)
 
-        nombre = info[0]
-        precio = info[1]
-        tienda = info[2]
+            nombre = info[0]
+            precio = info[1]
+            tienda = info[2]
 
-        precio_inicial = db.record("SELECT PrecioInicial FROM precio WHERE ProductID = ?", link)
+            precio_inicial = db.record("SELECT PrecioInicial FROM precio WHERE ProductID = ?", link)
 
-        if precio_inicial[0] > precio:
-            send_email_pilona(nombre, precio_inicial[0], precio, tienda, link)
-        else:
+            if precio_inicial[0] > precio:
+                send_email_pilona(nombre, precio_inicial[0], precio, tienda, link)
+            else:
+                pass
+        except:
             pass
 
     for link in productos_poli:
-        loop = asyncio.get_event_loop()
-        info = loop.run_until_complete(session(link))
-        print(link)
+        try:
+            loop = asyncio.get_event_loop()
+            info = loop.run_until_complete(session(link))
+            print(link)
 
-        nombre = info[0]
-        precio = info[1]
-        tienda = info[2]
+            nombre = info[0]
+            precio = info[1]
+            tienda = info[2]
 
-        precio_inicial = db.record("SELECT PrecioInicial FROM precio WHERE ProductID = ?", link)
+            precio_inicial = db.record("SELECT PrecioInicial FROM precio WHERE ProductID = ?", link)
 
 
-        if precio_inicial[0] > precio:
-            send_email_poli(nombre, precio_inicial[0], precio, tienda, link)
-        else:
+            if precio_inicial[0] > precio:
+                send_email_poli(nombre, precio_inicial[0], precio, tienda, link)
+            else:
+                pass
+        except:
             pass
 
     for link in productos_pala:
-        loop = asyncio.get_event_loop()
-        info = loop.run_until_complete(session(link))
-        print(link)
+        try:
+            loop = asyncio.get_event_loop()
+            info = loop.run_until_complete(session(link))
+            print(link)
 
-        nombre = info[0]
-        precio = info[1]
-        tienda = info[2]
+            nombre = info[0]
+            precio = info[1]
+            tienda = info[2]
 
-        precio_inicial = db.record("SELECT PrecioInicial FROM precio WHERE ProductID = ?", link)
+            precio_inicial = db.record("SELECT PrecioInicial FROM precio WHERE ProductID = ?", link)
 
-        if precio_inicial[0] > precio:
-            send_email_pala(nombre, precio_inicial[0], precio, tienda, link)
-        else:
+            if precio_inicial[0] > precio:
+                send_email_pala(nombre, precio_inicial[0], precio, tienda, link)
+            else:
+                pass
+
+        except:
             pass
 
 def send_email_poli(nombre, precio_inicial, precio, tienda, link):

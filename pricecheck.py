@@ -172,39 +172,45 @@ def check_paris(r, link):
 def check_prices_pilona():
 
     body = []
-
     for link in productos_pilona:
-        loop = asyncio.get_event_loop()
-        info = loop.run_until_complete(session(link))
+        try:
+            loop = asyncio.get_event_loop()
+            info = loop.run_until_complete(session(link))
 
-        nombre = info[0]
-        precio = info[1]
-        tienda = info[2]
+            nombre = info[0]
+            precio = info[1]
+            tienda = info[2]
 
-        linea = f"{nombre}: ${precio} en {tienda}.\n"
-        body.append(linea)
+            linea = f"{nombre}: ${precio} en {tienda}.\n"
+            body.append(linea)
 
-    body.sort()
-    body.insert(0, "Este es el precio actual de tus productos guardados:\n\n")
-    body = "".join(body)
+        except:
+            pass
 
-    send_email_pilona(body)
-    print("email sent to pilona!")
+        body.sort()
+        body.insert(0, "Este es el precio actual de tus productos guardados:\n\n")
+        body = "".join(body)
+
+        send_email_pilona(body)
+        print("email sent to pilona!")
 
 def check_prices_pala():
 
     body = []
 
     for link in productos_pala:
-        loop = asyncio.get_event_loop()
-        info = loop.run_until_complete(session(link))
+        try:
+            loop = asyncio.get_event_loop()
+            info = loop.run_until_complete(session(link))
 
-        nombre = info[0]
-        precio = info[1]
-        tienda = info[2]
+            nombre = info[0]
+            precio = info[1]
+            tienda = info[2]
 
-        linea = f"{nombre}: ${precio} en {tienda}.\n"
-        body.append(linea)
+            linea = f"{nombre}: ${precio} en {tienda}.\n"
+            body.append(linea)
+        except:
+            pass
 
     body.sort()
     body.insert(0, "Este es el precio actual de tus productos guardados:\n\n")
@@ -218,15 +224,18 @@ def check_prices_poli():
     body = []
 
     for link in productos_poli:
-        loop = asyncio.get_event_loop()
-        info = loop.run_until_complete(session(link))
+        try:
+            loop = asyncio.get_event_loop()
+            info = loop.run_until_complete(session(link))
 
-        nombre = info[0]
-        precio = info[1]
-        tienda = info[2]
+            nombre = info[0]
+            precio = info[1]
+            tienda = info[2]
 
-        linea = f"{nombre}: ${precio} en {tienda}.\n"
-        body.append(linea)
+            linea = f"{nombre}: ${precio} en {tienda}.\n"
+            body.append(linea)
+        except:
+            pass
 
     body.sort()
     body.insert(0, "Este es el precio actual de tus productos guardados:\n\n")
