@@ -185,6 +185,10 @@ def check_prices():
 
             if precio_inicial[0] > precio:
                 send_email_pilona(nombre, precio_inicial[0], precio, tienda, link)
+
+                db.execute("UPDATE precio SET PrecioInicial = ? WHERE ProductID = ?", precio, link)
+
+                db.commit()
             else:
                 pass
         except:
@@ -205,6 +209,10 @@ def check_prices():
 
             if precio_inicial[0] > precio:
                 send_email_poli(nombre, precio_inicial[0], precio, tienda, link)
+
+                db.execute("UPDATE precio SET PrecioInicial = ? WHERE ProductID = ?", precio, link)
+
+                db.commit()
             else:
                 pass
         except:
@@ -224,6 +232,10 @@ def check_prices():
 
             if precio_inicial[0] > precio:
                 send_email_pala(nombre, precio_inicial[0], precio, tienda, link)
+
+                db.execute("UPDATE precio SET PrecioInicial = ? WHERE ProductID = ?", precio, link)
+
+                db.commit()
             else:
                 pass
 

@@ -52,3 +52,5 @@ https://www.zmart.cl/scripts/prodView.asp?idProduct=75893
 https://www.zmart.cl/scripts/prodView.asp?idProduct=71850
 https://www.zmart.cl/scripts/prodView.asp?idProduct=67784
 https://www.zmart.cl/scripts/prodView.asp?idProduct=80572
+https://www.microplay.cl/producto/minecraft-dungeons-hero-edition-ps4/
+https://www.zmart.cl/scripts/prodView.asp?idProduct=76418
