@@ -6,16 +6,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import asyncio
 from requests_html import AsyncHTMLSession
 
-with open(os.path.join("data/products", "pilona.txt")) as f:
-    productos_pilona = f.read().splitlines()
-
-with open(os.path.join("data/products", "poli.txt")) as f:
-    productos_poli = f.read().splitlines()
-
-with open(os.path.join("data/products", "pala.txt")) as f:
-    productos_pala = f.read().splitlines()
-
-productos_totales = productos_poli + productos_pilona + productos_pala
+with open(os.path.join("data/products", "pokemon.txt")) as f:
+    productos = f.read().splitlines()
 
 async def session(link):
     asession = AsyncHTMLSession()
@@ -59,7 +51,26 @@ def check_zmart(r, link):
     precio = "".join(precio)
     precio = int(precio)
 
-    info = precio
+    print(link)
+
+    try:
+        status = r.html.find("div[class = 'txTituloRef']", first=True)
+        status = status.full_text.encode("ascii", "ignore")
+        status = status.decode()
+        if "DISPONIBLE" in status or "EARLY" in status:
+            status = "Disponible"
+        else:
+            status = "Agotado"
+    except:
+        status = r.html.find("div[class = 'txTituloRef dv260px']", first=True)
+        status = status.full_text.encode("ascii", "ignore")
+        status = status.decode()
+        if "DISPONIBLE" in status or "EARLY" in status:
+            status = "Disponible"
+        else:
+            status = "Agotado"
+
+    info = [precio, status]
 
     return info
 
@@ -72,7 +83,8 @@ def check_microplay(r, link):
     precio = [x for x in precio if x.isdigit()]
     precio = int("".join(precio))
 
-    info = precio
+    status = "Disponible"
+    info = [precio, status]
 
     return info
 
@@ -82,18 +94,8 @@ def check_weplay(r, link):
     precio = [x for x in precio if x.isdigit()]
     precio = int("".join(precio))
 
-    info = precio
-
-    return info
-
-def check_warpig(r, link):
-
-    precio = r.html.find('span[data-bs="product.finalPrice"]', first=True)
-    precio = precio.full_text
-    precio = [x for x in precio if x.isdigit()]
-    precio = int("".join(precio))
-
-    info = precio
+    status = "Disponible"
+    info = [precio, status]
 
     return info
 
@@ -104,7 +106,8 @@ def check_planetaloz(r, link):
     precio = [x for x in precio if x.isdigit()]
     precio = int("".join(precio))
 
-    info = precio
+    status = "Disponible"
+    info = [precio, status]
 
     return info
 
@@ -119,7 +122,8 @@ def check_linio(r, link):
     precio = [x for x in precio if x.isdigit()]
     precio = int("".join(precio))
 
-    info = precio
+    status = "Disponible"
+    info = [precio, status]
 
     return info
 
@@ -134,7 +138,8 @@ def check_paris(r, link):
     precio = [x for x in precio if x.isdigit()]
     precio = int("".join(precio))
 
-    info = precio
+    status = "Disponible"
+    info = [precio, status]
 
     return info
 
@@ -142,30 +147,37 @@ def set_initial_prices(productos_totales):
     db.autosave(AsyncIOScheduler())
 
     precios = []
+    statuses = []
 
-    for link in productos_totales:
-        print(link)
+    for link in productos:
         loop = asyncio.get_event_loop()
         info = loop.run_until_complete(session(link))
-        precio = info
+        precio = info[0]
+        status = info[1]
         precios.append(precio)
+        statuses.append(status)
 
-    zip_iterator = zip(productos_totales, precios)
-    product_dict = dict(zip_iterator)
-    print(product_dict)
+    precios_iterator = zip(productos_totales, precios)
+    precios_dict = dict(precios_iterator)
+    status_iterator = zip(productos_totales, statuses)
+    statuses_dict = dict(status_iterator)
+
 
     db.multiexec("INSERT OR IGNORE INTO precio (ProductID) VALUES (?)",
 				((link,) for link in productos_totales))
 
-    for key, value in product_dict.items():
+    for key, value in precios_dict.items():
         db.execute("UPDATE precio SET PrecioInicial = ? WHERE ProductID = ?", value, key)
+
+    for key, value in statuses_dict.items():
+        db.execute("UPDATE precio SET Status = ? WHERE ProductID = ?", value, key)
 
     to_remove = []
 
     stored_productos = db.column("SELECT ProductID FROM precio")
 
     for producto in stored_productos:
-      if producto not in productos_totales:
+      if producto not in productos:
         to_remove.append(producto)
 
     db.multiexec("DELETE FROM precio WHERE ProductID = ?",
@@ -175,7 +187,7 @@ def set_initial_prices(productos_totales):
 
 def main():
     while True:
-        set_initial_prices(productos_totales)
+        set_initial_prices(productos)
         print("listo!")
         return
 

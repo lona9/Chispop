@@ -6,14 +6,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from requests_html import AsyncHTMLSession
 import asyncio
 
-with open(os.path.join("data/products", "pilona.txt"), encoding='utf-8') as f:
-    productos_pilona = f.read().splitlines()
-
-with open(os.path.join("data/products", "poli.txt"), encoding='utf-8') as f:
-    productos_poli = f.read().splitlines()
-
-with open(os.path.join("data/products", "pala.txt"), encoding='utf-8') as f:
-    productos_pala = f.read().splitlines()
+with open(os.path.join("data/products", "pokemon.txt"), encoding='utf-8') as f:
+    productos = f.read().splitlines()
 
 async def session(link):
     asession = AsyncHTMLSession()
@@ -65,7 +59,25 @@ def check_zmart(r, link):
 
     tienda = "Zmart.cl"
 
-    info = [nombre, precio, tienda]
+    try:
+        status = r.html.find("div[class = 'txTituloRef']", first=True)
+        status = status.full_text.encode("ascii", "ignore")
+        status = status.decode()
+        if "DISPONIBLE" in status or "EARLY" in status:
+            status = "Disponible"
+        else:
+            status = "Agotado"
+
+    except:
+        status = r.html.find("div[class = 'txTituloRef dv260px']", first=True)
+        status = status.full_text.encode("ascii", "ignore")
+        status = status.decode()
+        if "DISPONIBLE" in status or "EARLY" in status:
+            status = "Disponible"
+        else:
+            status = "Agotado"
+
+    info = [nombre, precio, tienda, status]
 
     return info
 
@@ -84,7 +96,9 @@ def check_microplay(r, link):
 
     tienda = "Microplay"
 
-    info = [nombre, precio, tienda]
+    status = "Disponible"
+
+    info = [nombre, precio, tienda, status]
 
     return info
 
@@ -99,25 +113,9 @@ def check_weplay(r, link):
     precio = int("".join(precio))
 
     tienda = "WePlay"
+    status = "Disponible"
 
-    info = [nombre, precio, tienda]
-
-    return info
-
-def check_warpig(r, link):
-    nombre = r.html.find('title', first=True)
-    nombre = nombre.full_text.encode("ascii", "ignore")
-    nombre = nombre.decode()
-    nombre = nombre[:-15]
-
-    precio = r.html.find('span[data-bs="product.finalPrice"]', first=True)
-    precio = precio.full_text
-    precio = [x for x in precio if x.isdigit()]
-    precio = int("".join(precio))
-
-    tienda = "Warpig Games"
-
-    info = [nombre, precio, tienda]
+    info = [nombre, precio, tienda, status]
 
     return info
 
@@ -132,8 +130,9 @@ def check_planetaloz(r, link):
     precio = int("".join(precio))
 
     tienda = "Planeta LoZ"
+    status = "Disponible"
 
-    info = [nombre, precio, tienda]
+    info = [nombre, precio, tienda, status]
 
     return info
 
@@ -149,8 +148,9 @@ def check_linio(r, link):
     precio = int("".join(precio))
 
     tienda = "Linio"
+    status = "Disponible"
 
-    info = [nombre, precio, tienda]
+    info = [nombre, precio, tienda, status]
 
     return info
 
@@ -165,13 +165,14 @@ def check_paris(r, link):
     precio = int("".join(precio))
 
     tienda = "Paris"
+    status = "Disponible"
 
-    info = [nombre, precio, tienda]
+    info = [nombre, precio, tienda, status]
 
     return info
 
 def check_prices():
-    for link in productos_pilona:
+    for link in productos:
         try:
             loop = asyncio.get_event_loop()
             info = loop.run_until_complete(session(link))
@@ -180,85 +181,34 @@ def check_prices():
             nombre = info[0]
             precio = info[1]
             tienda = info[2]
+            status = info[3]
 
             precio_inicial = db.record("SELECT PrecioInicial FROM precio WHERE ProductID = ?", link)
 
+            status_inicial = db.record("SELECT Status FROM precio WHERE ProductID = ?", link)
+
             if precio_inicial[0] > precio:
-                send_email_pilona(nombre, precio_inicial[0], precio, tienda, link)
-
+                send_email(nombre, precio_inicial[0], precio, tienda, link)
                 db.execute("UPDATE precio SET PrecioInicial = ? WHERE ProductID = ?", precio, link)
-
                 db.commit()
             else:
                 pass
-        except:
-            pass
 
-    for link in productos_poli:
-        try:
-            loop = asyncio.get_event_loop()
-            info = loop.run_until_complete(session(link))
-            print(link)
-
-            nombre = info[0]
-            precio = info[1]
-            tienda = info[2]
-
-            precio_inicial = db.record("SELECT PrecioInicial FROM precio WHERE ProductID = ?", link)
-
-
-            if precio_inicial[0] > precio:
-                send_email_poli(nombre, precio_inicial[0], precio, tienda, link)
-
-                db.execute("UPDATE precio SET PrecioInicial = ? WHERE ProductID = ?", precio, link)
+            if status_inicial[0] != status:
+                print("distintos!")
+                send_email_stock(nombre, precio, tienda, link)
+                db.execute("UPDATE precio SET Status = ? WHERE ProductID = ?", "Disponible", link)
 
                 db.commit()
-            else:
-                pass
-        except:
-            pass
 
-    for link in productos_pala:
-        try:
-            loop = asyncio.get_event_loop()
-            info = loop.run_until_complete(session(link))
-            print(link)
-
-            nombre = info[0]
-            precio = info[1]
-            tienda = info[2]
-
-            precio_inicial = db.record("SELECT PrecioInicial FROM precio WHERE ProductID = ?", link)
-
-            if precio_inicial[0] > precio:
-                send_email_pala(nombre, precio_inicial[0], precio, tienda, link)
-
-                db.execute("UPDATE precio SET PrecioInicial = ? WHERE ProductID = ?", precio, link)
-
-                db.commit()
             else:
                 pass
 
         except:
             pass
 
-def send_email_poli(nombre, precio_inicial, precio, tienda, link):
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.ehlo()
-    server.starttls()
-    server.ehlo()
 
-    server.login('chispopalertas@gmail.com', 'ysooqeblypsipibh')
-
-    subject = f"Poli: El precio de {nombre} en {tienda} ha cambiado"
-    body = f"El precio de {nombre} en {tienda} ha cambiado de ${precio_inicial} a ${precio}.\nRevisa en {link}"
-    msg = f"Subject:{subject}\n\n{body}"
-
-    server.sendmail('chispopalertas@gmail.com', 'poliarriagadac@gmail.com', msg)
-
-    server.quit()
-
-def send_email_pilona(nombre, precio_inicial, precio, tienda, link):
+def send_email(nombre, precio_inicial, precio, tienda, link):
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.ehlo()
     server.starttls()
@@ -269,12 +219,16 @@ def send_email_pilona(nombre, precio_inicial, precio, tienda, link):
     subject = f"Pilona: El precio de {nombre} en {tienda} ha cambiado"
     body = f"El precio de {nombre} en {tienda} ha cambiado de ${precio_inicial} a ${precio}.\nRevisa en {link}"
     msg = f"Subject:{subject}\n\n{body}"
-
     server.sendmail('chispopalertas@gmail.com', 'pilar.vasquez.h@gmail.com', msg)
+
+    subject = f"Nico: {nombre} en {tienda} de nuevo en stock!"
+    body = f"{nombre} en {tienda} se encuentra de nuevo en stock a ${precio}.\nRevisa en {link}"
+    msg = f"Subject:{subject}\n\n{body}"
+    server.sendmail('chispopalertas@gmail.com', 'nicolascarrillovergara@gmail.com', msg)
 
     server.quit()
 
-def send_email_pala(nombre, precio_inicial, precio, tienda, link):
+def send_email_stock(nombre, precio, tienda, link):
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.ehlo()
     server.starttls()
@@ -282,11 +236,15 @@ def send_email_pala(nombre, precio_inicial, precio, tienda, link):
 
     server.login('chispopalertas@gmail.com', 'ysooqeblypsipibh')
 
-    subject = f"Paula: El precio de {nombre} en {tienda} ha cambiado"
-    body = f"El precio de {nombre} en {tienda} ha cambiado de ${precio_inicial} a ${precio}.\nRevisa en {link}"
+    subject = f"Pilona: {nombre} en {tienda} de nuevo en stock!"
+    body = f"{nombre} en {tienda} se encuentra de nuevo en stock a ${precio}.\nRevisa en {link}"
     msg = f"Subject:{subject}\n\n{body}"
+    server.sendmail('chispopalertas@gmail.com', 'pilar.vasquez.h@gmail.com', msg)
 
-    server.sendmail('chispopalertas@gmail.com', 'paula.vash@gmail.com', msg)
+    subject = f"Nico: {nombre} en {tienda} de nuevo en stock!"
+    body = f"{nombre} en {tienda} se encuentra de nuevo en stock a ${precio}.\nRevisa en {link}"
+    msg = f"Subject:{subject}\n\n{body}"
+    server.sendmail('chispopalertas@gmail.com', 'nicolascarrillovergara@gmail.com', msg)
 
     server.quit()
 
