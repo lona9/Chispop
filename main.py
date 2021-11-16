@@ -76,6 +76,7 @@ def check_zmart(r, link):
             status = "Disponible"
         else:
             status = "Agotado"
+    print(status)
 
     info = [nombre, precio, tienda, status]
 
@@ -196,10 +197,11 @@ def check_prices():
 
             if status_inicial[0] != status:
                 print("distintos!")
-                send_email_stock(nombre, precio, tienda, link)
-                db.execute("UPDATE precio SET Status = ? WHERE ProductID = ?", "Disponible", link)
-
+                db.execute("UPDATE precio SET Status = ? WHERE ProductID = ?", status, link)
                 db.commit()
+
+                if status == "Disponible":
+                    send_email_stock(nombre, precio, tienda, link)
 
             else:
                 pass
