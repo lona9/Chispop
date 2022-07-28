@@ -75,6 +75,9 @@ def check_zmart(r, link):
     return info
 
 def check_microplay(r, link):
+    ''''
+    checks microplay
+    ''''
 
     precio = r.html.find('script[type="text/javascript"]')[10].full_text
     precios = precio.splitlines()
